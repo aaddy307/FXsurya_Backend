@@ -17,6 +17,7 @@ import { generalLimiter, authLimiter, contactLimiter } from "./middleware/rateLi
 
 const app = express();
 
+app.disable("etag");
 app.set("trust proxy", 1);
 
 connectDB();
