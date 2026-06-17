@@ -17,6 +17,8 @@ import { generalLimiter, authLimiter, contactLimiter } from "./middleware/rateLi
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 connectDB();
 
 Admin.countDocuments().then(async (count) => {
