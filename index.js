@@ -33,13 +33,30 @@ Admin.countDocuments().then(async (count) => {
   }
 });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://f-xsurya-frontend.vercel.app",
+  "https://fx-surya.vercel.app",
+  "https://fxsurya.vercel.app",
+];
+
 app.use(helmet());
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_URL || "http://localhost:3000",
-      "https://f-xsurya-frontend.vercel.app",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, postman, etc.)
+      if (!origin) return callback(null, true);
+
+      const isAllowed = allowedOrigins.includes(origin) || origin === process.env.CLIENT_URL;
+      const isVercelPreview = /\.vercel\.app$/.test(origin) &&
+        (origin.includes("fxsurya") || origin.includes("fx-surya") || origin.includes("f-xsurya-frontend"));
+
+      if (isAllowed || isVercelPreview) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   })
 );

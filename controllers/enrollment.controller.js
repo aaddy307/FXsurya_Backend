@@ -68,8 +68,36 @@ const getEnrollmentById = asyncHandler(async (req, res) => {
   ApiResponse.success(res, 200, enrollment, "Enrollment fetched successfully");
 });
 
+const updateEnrollment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { razorpayPaymentId, status } = req.body;
+
+  const enrollment = await Enrollment.findById(id);
+
+  if (!enrollment) {
+    throw ApiError.notFound("Enrollment not found");
+  }
+
+  if (razorpayPaymentId !== undefined) {
+    enrollment.razorpayPaymentId = razorpayPaymentId;
+  }
+
+  if (status !== undefined) {
+    const validStatuses = ["pending", "paid", "failed"];
+    if (!validStatuses.includes(status.toLowerCase())) {
+      throw ApiError.badRequest("Invalid status. Must be 'pending', 'paid', or 'failed'");
+    }
+    enrollment.status = status.toLowerCase();
+  }
+
+  await enrollment.save();
+
+  ApiResponse.success(res, 200, enrollment, "Enrollment updated successfully");
+});
+
 export {
   createEnrollment,
   getEnrollments,
   getEnrollmentById,
+  updateEnrollment,
 };
