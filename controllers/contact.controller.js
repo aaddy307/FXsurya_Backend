@@ -22,7 +22,7 @@ const createContact = asyncHandler(async (req, res) => {
 });
 
 const getContacts = asyncHandler(async (req, res) => {
-  const { type, page = 1, limit = 20 } = req.query;
+  const { type, page = 1, limit = 10000 } = req.query;
   
   const filter = {};
   if (type) {

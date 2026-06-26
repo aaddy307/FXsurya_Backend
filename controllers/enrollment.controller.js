@@ -34,7 +34,7 @@ const createEnrollment = asyncHandler(async (req, res) => {
 });
 
 const getEnrollments = asyncHandler(async (req, res) => {
-  const { status, page = 1, limit = 20 } = req.query;
+  const { status, page = 1, limit = 10000 } = req.query;
   
   const filter = {};
   if (status) {

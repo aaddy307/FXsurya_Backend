@@ -3,6 +3,7 @@ import Admin from "../models/Admin.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import cloudinary from "../config/cloudinary.js";
 import Video from "../models/Video.js";
 import Contact from "../models/Contact.js";
 import Enrollment from "../models/Enrollment.js";
@@ -81,8 +82,50 @@ const getStats = asyncHandler(async (req, res) => {
   }, "Stats retrieved successfully");
 });
 
+const uploadImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw ApiError.badRequest("Please upload an image file");
+  }
+
+  const uploadPromise = () => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "fx-surya",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+  };
+
+  try {
+    const result = await uploadPromise();
+    ApiResponse.success(
+      res,
+      200,
+      {
+        url: result.secure_url,
+        public_id: result.public_id,
+      },
+      "Image uploaded successfully"
+    );
+  } catch (error) {
+    console.error("Cloudinary upload error:", error);
+    throw ApiError.internal("Failed to upload image to Cloudinary");
+  }
+});
+
 export {
   login,
   getMe,
   getStats,
+  uploadImage,
 };

@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import Video from "../models/Video.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
@@ -8,6 +9,22 @@ const getVideos = asyncHandler(async (req, res) => {
   const { category, limit = 12, page = 1, platform } = req.query;
   
   const filter = { isPublished: true };
+  let finalLimit = parseInt(limit);
+
+  // Allow admins to view draft videos and bypass pagination limit
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      jwt.verify(token, process.env.JWT_SECRET);
+      delete filter.isPublished;
+      if (!req.query.limit) {
+        finalLimit = 10000;
+      }
+    } catch (err) {
+      // Ignore token verification errors (fallback to showing only published)
+    }
+  }
   
   if (category && category !== "all") {
     filter.category = category.toLowerCase();
@@ -17,14 +34,14 @@ const getVideos = asyncHandler(async (req, res) => {
     filter.platform = platform.toLowerCase();
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page) - 1) * finalLimit;
   const total = await Video.countDocuments(filter);
   const videos = await Video.find(filter)
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(finalLimit);
 
-  const totalPages = Math.ceil(total / parseInt(limit));
+  const totalPages = Math.ceil(total / finalLimit);
   const hasMore = skip + videos.length < total;
 
   ApiResponse.success(res, 200, {
