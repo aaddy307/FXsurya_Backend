@@ -12,17 +12,19 @@ const getVideos = asyncHandler(async (req, res) => {
   let finalLimit = parseInt(limit);
 
   // Allow admins to view draft videos and bypass pagination limit
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
-    try {
-      jwt.verify(token, process.env.JWT_SECRET);
-      delete filter.isPublished;
-      if (!req.query.limit) {
-        finalLimit = 10000;
+  if (req.query.admin === "true") {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        jwt.verify(token, process.env.JWT_SECRET);
+        delete filter.isPublished;
+        if (!req.query.limit) {
+          finalLimit = 10000;
+        }
+      } catch (err) {
+        // Ignore token verification errors (fallback to showing only published)
       }
-    } catch (err) {
-      // Ignore token verification errors (fallback to showing only published)
     }
   }
   
