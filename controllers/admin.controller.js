@@ -83,6 +83,14 @@ const getStats = asyncHandler(async (req, res) => {
 });
 
 const uploadImage = asyncHandler(async (req, res) => {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    throw ApiError.internal("Cloudinary credentials are not configured in the backend .env file. Please populate CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.");
+  }
+
   if (!req.file) {
     throw ApiError.badRequest("Please upload an image file");
   }
